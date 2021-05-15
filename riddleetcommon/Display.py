@@ -1,5 +1,5 @@
 import curses
-from .components import getColour, Layout, Header, Context, Prompt
+from .Components import getColour, Layout, Header, Context, Prompt
 
 
 class Display:

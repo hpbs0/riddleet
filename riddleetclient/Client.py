@@ -1,5 +1,5 @@
 
-from riddleetcommon.display import Display
+from riddleetcommon.Display import Display
 from riddleetclient.ResponseThread import ResponseThread
 from curses import wrapper
 
