@@ -1,10 +1,11 @@
 import curses
-from .Components import getColour, Layout, Header, Context, Prompt
+from .Components import Layout, Header, Context, Prompt
 
 
 class Display:
     def __init__(self, screen):
         curses.curs_set(False)
+        
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
@@ -12,6 +13,7 @@ class Display:
         curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
         curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_BLACK)
+
         self.screen = screen
         self.height, self.width = self.screen.getmaxyx()
         self.layout = Layout(self.height, self.width)

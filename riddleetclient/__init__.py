@@ -1,7 +1,5 @@
-
-from riddleetcommon.Display import Display
-from riddleetclient.ResponseThread import ResponseThread
-from curses import wrapper
+from .Display import Display
+from .ResponseThread import ResponseThread
 
 
 class Client(Display):
@@ -165,11 +163,3 @@ class Client(Display):
         Sends a leave room request
         """
         self.socket.sendall(bytes("leave:room:", 'UTF-8'))
-
-
-def main(stdscr):
-    display = Client(stdscr)
-
-
-if __name__ == "__main__":
-    wrapper(main)

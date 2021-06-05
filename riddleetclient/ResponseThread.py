@@ -83,6 +83,7 @@ class ResponseThread(Thread):
 
             elif typ == "send" and request == "message":
                 self.message(data)
+    
             elif typ == "set" and request == "error":
                 self.printError(data)
 

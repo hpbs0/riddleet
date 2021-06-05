@@ -199,7 +199,7 @@ class PlayerThread(Thread):
                      "set", "error", "You need to be in a room to send messsage.")
 
 
-def main():
+def server():
     """
     Opens a thread for each player/connection
     """
@@ -219,5 +219,3 @@ def main():
             pass
 
 
-if __name__ == "__main__":
-    main()
