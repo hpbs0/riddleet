@@ -5,9 +5,9 @@ from threading import Thread
 from datetime import datetime
 
 
-class ResponseThread(Thread):
+class Connection(Thread):
     def __init__(self, Client):
-        super(ResponseThread, self).__init__()
+        super(Connection, self).__init__()
         self.client = Client
         self.daemon = True
 
@@ -83,7 +83,7 @@ class ResponseThread(Thread):
 
             elif typ == "send" and request == "message":
                 self.message(data)
-    
+
             elif typ == "set" and request == "error":
                 self.printError(data)
 
@@ -108,14 +108,14 @@ class ResponseThread(Thread):
             "Leaved current room with ID: "+data, "YELLOW")
 
     def notifications(self, data: str):
-        player, msg, time = data.split(":", 2)
+        player, time, msg = data.split(" ", 2)
         self.client._group_draw(
             msg, "YELLOW", "Room", time)
 
     def message(self, data: str):
-        player, msg, time = data.split(":", 2)
+        player, time, msg = data.split(" ", 2)
         self.client._group_draw(
-            msg, "WHITE", player, time)
+            msg, "WHITE", player, "[{0}]".format(time))
 
     def printError(self, data: str):
         self.printWithTime(

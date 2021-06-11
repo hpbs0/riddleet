@@ -1,6 +1,6 @@
 from .Display import Display
-from .ResponseThread import ResponseThread
-
+from .connection import Connection
+import time
 
 class Client(Display):
     def __init__(self, screen):
@@ -11,7 +11,7 @@ class Client(Display):
         self.socket = None
 
         try:
-            self.server = ResponseThread(self)
+            self.server = Connection(self)
             self.server.start()
             self.run()
 
@@ -96,7 +96,7 @@ class Client(Display):
                         self._prompt_draw(
                             "{0}:Command not found".format(msg), "RED")
                     elif msg != '':
-                        self._prompt_draw(msg, "RED")
+                        self._prompt_draw(msg, "WHITE")
                     else:
                         self._prompt_draw("-->!Server not connected", "YELLOW")
                 except Exception as e:

@@ -62,10 +62,9 @@ class PlayerThread(Thread):
 
             msg = ""
             while True:
-                data = self.socket.recv(1024)
-                print
-                typ, request, data = data.decode().split(":")
-
+                data = self.socket.recv(1024).decode()
+                typ, request, data = data.split(":", 2)
+                print(typ, request, data, "-----------------------------")
                 # Set name request
                 if typ == "set" and request == "name":
                     self.setName(data)
@@ -189,11 +188,11 @@ class PlayerThread(Thread):
         if self.roomID != "":
             now = datetime.now().strftime('%H:%M')
             sendData(self.socket, "send", typ,
-                     "{0}:{1}:{2}".format(self.name, msg, now))
+                     "{0} {1} {2}".format(self.name, now, msg))
             for player in rooms[self.roomID]["players"]:
                 if player != self.id:
                     sendData(rooms[self.roomID]["players"]
-                             [player], "send", typ, "{0}:{1}:{2}".format(self.name, msg, now))
+                             [player], "send", typ, "{0} {1} {2}".format(self.name, now, msg))
         else:
             sendData(self.socket,
                      "set", "error", "You need to be in a room to send messsage.")
@@ -217,5 +216,3 @@ def server():
                 newPlayer.start()
         except KeyboardInterrupt:
             pass
-
-

@@ -17,41 +17,50 @@ def getColour(color):
         return 6
     elif color == "WHITE":
         return 7
+    elif color == "HEADER":
+        return 8
+    elif color == "HEADER_WARN":
+        return 9
+    elif color == "HEADER_OK":
+        return 10
+    
 
 
 class Layout:
-    HEADER = 2
+    HEADER = 1
     PROMPT = 3
 
     def __init__(self, height, width):
-        self.headerRows = Layout.HEADER
-        self.headerCols = width
-        self.headerPositionY = 2
-        self.headerPositionX = 0
+        self.headerRows: int = Layout.HEADER
+        self.headerCols: int = width
+        self.headerPositionY: int = 2
+        self.headerPositionX: int = 0
 
-        self.contextRows = height - Layout.PROMPT - Layout.HEADER
-        self.contextCols = width
-        self.contextPositionY = Layout.PROMPT
-        self.contextPositionX = 0
+        self.contextRows: int = height - Layout.PROMPT - Layout.HEADER
+        self.contextCols: int = width
+        self.contextPositionY: int = Layout.PROMPT
+        self.contextPositionX: int = 0
 
-        self.promptRows = Layout.PROMPT
-        self.promptCols = width
-        self.promptPositionY = height - Layout.PROMPT
-        self.promptPositionX = 0
+        self.promptRows: int = Layout.PROMPT
+        self.promptCols: int = width
+        self.promptPositionY: int = height - Layout.PROMPT
+        self.promptPositionX: int = 0
 
 
 class Header:
 
-    def __init__(self, layout, screen):
-        self.layout = layout
+    def __init__(self, layout: Layout, screen):
+        self.layout: Layout = layout
         self.screen = screen
         self.window = curses.newwin(
             layout.headerRows, layout.headerCols, layout.headerPositionY, layout.headerPositionX)
+        self.window.bkgd(' ', curses.color_pair(getColour("HEADER")))
         self.status = {"Name:": "Player",
                        "Server:": "NaN", "Room:": "NaN"}
         self.redraw()
 
     def redraw(self):
+        self.window.bkgd(' ', curses.color_pair(getColour("HEADER")))
         self.window.clear()
         limit = 0
         for key in self.status:
@@ -61,10 +70,10 @@ class Header:
                 if(self.status[key] == "NaN"):
 
                     self.window.addstr(
-                        self.status[key]+"\t", curses.color_pair(getColour("MAGENTA")))
+                        self.status[key]+"\t", curses.color_pair(getColour("HEADER_OK")))
                 else:
                     self.window.addstr(
-                        self.status[key]+"\t", curses.color_pair(getColour("GREEN")))
+                        self.status[key]+"\t", curses.color_pair(getColour("HEADER_WARN")))
 
         self.window.refresh()
 
@@ -89,8 +98,8 @@ class Header:
 
 
 class Context:
-    def __init__(self, layout, screen, xFactor=6, yFactor=6, xOffset=0, yOffset=0):
-        self.layout = layout
+    def __init__(self, layout: Layout, screen, xFactor=6, yFactor=6, xOffset=0, yOffset=0):
+        self.layout: Layout = layout
         self.screen = screen
         self.children = []
         self.window = curses.newwin(
@@ -127,8 +136,8 @@ class Context:
 
 
 class Prompt:
-    def __init__(self, layout, screen):
-        self.layout = layout
+    def __init__(self, layout: Layout, screen):
+        self.layout: Layout = layout
         self.screen = screen
         self.window = curses.newwin(
             layout.promptRows, layout.promptCols, layout.promptPositionY, layout.promptPositionX)

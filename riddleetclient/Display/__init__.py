@@ -5,7 +5,6 @@ from .Components import Layout, Header, Context, Prompt
 class Display:
     def __init__(self, screen):
         curses.curs_set(False)
-        
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
@@ -13,6 +12,9 @@ class Display:
         curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
         curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(8, curses.COLOR_WHITE, 238)
+        curses.init_pair(9, curses.COLOR_GREEN, 238)
+        curses.init_pair(10, curses.COLOR_RED, 238)
 
         self.screen = screen
         self.height, self.width = self.screen.getmaxyx()
@@ -63,7 +65,13 @@ class Display:
                 buffer.pop()
             elif char == curses.KEY_RESIZE:
                 self.resize()
-            elif 32 <= char <= 126 and len(buffer) < 50:
+            elif char == 32 and len(buffer) == 1:
+                continue
+            elif char == 32 and len(buffer) > 1 and buffer[-1] == " ":
+                continue
+            elif char == 32 and len(buffer) < 1:
+                continue
+            elif 32 <= char <= 126 and len(buffer) < 70:
                 buffer.append(chr(char))
             self.prompt.redraw("".join(buffer[0:self.prompt.promptLimit]))
 
