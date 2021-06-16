@@ -1,14 +1,18 @@
 from .Display import Display
-from .connection import Connection
-import time
+from .Connection import Connection
+from .Timer import Timer
+
 
 class Client(Display):
     def __init__(self, screen):
         Display.__init__(self, screen)
         self.isRunning = True
+        self.isGameRuning = False
         self.needConnection = False
         self.isConnected = False
         self.socket = None
+        self.counter = Timer(self)
+        self.timer = None
 
         try:
             self.server = Connection(self)
@@ -21,12 +25,15 @@ class Client(Display):
     def _help(self):
         commands = ["/h \t\t\t: print help",
                     "/q \t\t\t: quit the game",
-                    "/r null/group/server \t: clean the view",
+                    "/r <''|group|server> \t: clean the view",
                     "/n <name>\t\t: set your name!",
                     "/o \t\t\t: open a room!",
+                    "/k <playerID> \t\t: Kick a player!",
                     "/j <id>\t\t\t: joins to a playroom!",
-                    "/!<msg>\t\t\t: send a message to your room!",
-                    "/d \t\t\t: leave the room!"]
+                    "/d \t\t\t: leave the room!",
+                    "/st \t\t\t: Start the game!",
+                    "/p \t\t\t: Print the players/leaderboard!", 
+                    "/!<msg>\t\t\t: send a message to your room!"]
 
         self._prompt_draw("")
         self._prompt_draw("\t!SOME WORKS ONLINE ONLY", "RED")
@@ -58,6 +65,15 @@ class Client(Display):
         self.serverContext.append(props, colour)
         self.serverContext.redrawMultiColour()
 
+    def startTimer(self):
+        self.timer = Timer(self)
+        self.timer.start()
+
+    def stopTimer(self):
+        if self.timer != None:
+            self.timer.stop()
+        self.timer = None
+
     def run(self):
         try:
             self._help()
@@ -65,7 +81,6 @@ class Client(Display):
                 self.redraw()
                 msg = self.getInput()
                 try:
-
                     if msg == '':
                         continue
                     elif msg == "/h":
@@ -83,15 +98,19 @@ class Client(Display):
                         self.waitServerConnection(
                             self.setNameRequest, msg[3:])
                     elif msg == "/o":
-                        self.waitServerConnection(self.openRoomRequest)
+                        self.waitServerConnection(self.openRoom)
                     elif msg[:3] == "/j ":
                         self.waitServerConnection(
-                            self.joinRoomRequest, msg[3:])
+                            self.joinRoom, msg[3:])
                     elif msg[:1] == "!":
                         self.waitServerConnection(
                             self.sendMessage, msg[1:])
                     elif msg == "/d":
-                        self.waitServerConnection(self.leaveRoomRequest)
+                        self.waitServerConnection(self.leaveRoom)
+                    elif msg == "/st":
+                        self.waitServerConnection(self.startGame)
+                    elif msg == "/p":
+                        self.waitServerConnection(self.getPlayers)
                     elif msg[:1] == "/":
                         self._prompt_draw(
                             "{0}:Command not found".format(msg), "RED")
@@ -133,13 +152,13 @@ class Client(Display):
             self._prompt_draw(
                 "-->!Please enter a string maximum length is less than 15 and minimum length 6", "YELLOW")
 
-    def openRoomRequest(self):
+    def openRoom(self):
         """
         Sends an open room request
         """
         self.socket.sendall(bytes("open:room:", 'UTF-8'))
 
-    def joinRoomRequest(self, roomID):
+    def joinRoom(self, roomID):
         """
         Sends an join room request
         Length of the roomID's are 6
@@ -158,8 +177,20 @@ class Client(Display):
         if len(msg) > 0:
             self.socket.sendall(bytes("send:message:{0}".format(msg), 'UTF-8'))
 
-    def leaveRoomRequest(self):
+    def leaveRoom(self):
         """
         Sends a leave room request
         """
         self.socket.sendall(bytes("leave:room:", 'UTF-8'))
+
+    def startGame(self):
+        """
+        Sends a start game request
+        """
+        self.socket.sendall(bytes("start:game:", 'UTF-8'))
+
+    def getPlayers(self):
+        """
+        Sends a request for player table
+        """
+        self.socket.sendall(bytes("get:players:", 'UTF-8'))

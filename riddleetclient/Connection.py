@@ -3,10 +3,11 @@ import time
 from curses import wrapper
 from threading import Thread
 from datetime import datetime
+from .Display import Display
 
 
 class Connection(Thread):
-    def __init__(self, Client):
+    def __init__(self, Client: Display):
         super(Connection, self).__init__()
         self.client = Client
         self.daemon = True
@@ -48,6 +49,10 @@ class Connection(Thread):
                 self.client.header.setRoom("NaN")
                 self.client._server_draw(str(e), "RED")
                 self.client.header.setServer("NaN")
+                self.client.header.setQuestion("-")
+                self.client.header.setNumber("-")
+                self.client.header.setAnswer("-")
+                self.client.stopTimer()
                 self.printWithTime("Connection Failed", "RED")
                 _socket.close()
                 pass
@@ -64,59 +69,118 @@ class Connection(Thread):
         """
         while True:
             data = self.client.socket.recv(1024).decode()
+
             typ, request, data = data.split(":", 2)
 
+            # set name <data>
             if typ == "set" and request == "name":
-                self.setNameResponse(data)
+                self.setName(data)
 
+            # set id <data>
+            if typ == "set" and request == "id":
+                self.setID(data)
+
+            # open room <roomID:string>
             elif typ == "open" and request == "room":
-                self.openRoomResponse(data)
+                self.openRoom(data)
 
+            # join room <roomID:string>
             elif typ == "join" and request == "room":
-                self.joinRoomResponse(data)
+                self.joinRoom(data)
 
+            # leave room <roomID:string>
             elif typ == "leave" and request == "room":
-                self.leaveRoomResponse(data)
+                self.leaveRoom(data)
 
+            # send notify <notification:string>
             elif typ == "send" and request == "notify":
                 self.notifications(data)
 
+            # send message <message:string>
             elif typ == "send" and request == "message":
                 self.message(data)
 
-            elif typ == "set" and request == "error":
-                self.printError(data)
+            # set question <question:string>
+            elif typ == "set" and request == "question":
+                self.setQuestion(data)
 
-    def setNameResponse(self, data: str):
+            # set error <error:string>
+            elif typ == "set" and request == "error":
+                self.error(data)
+
+            # print lb <players:[string:]*>
+            elif typ == "print" and request == "lb":
+                self.printPlayers(data)
+    """
+    Response Functions
+    """
+
+    def setName(self, data: str):
         self.client.header.setName(data)
         self.printWithTime(
             "Name has been set successfully", "GREEN")
 
-    def openRoomResponse(self, data: str):
+    def setID(self, data: str):
+        self.client.header.setID(data)
+
+    def openRoom(self, data: str):
         self.client.header.setRoom(data)
         self.printWithTime(
             "Room created with ID: "+data, "GREEN")
 
-    def joinRoomResponse(self, data: str):
+    def joinRoom(self, data: str):
         self.client.header.setRoom(data)
         self.printWithTime(
             "Joined the room with ID: "+data, "GREEN")
 
-    def leaveRoomResponse(self, data: str):
+    def leaveRoom(self, data: str):
         self.client.header.setRoom("NaN")
         self.printWithTime(
             "Leaved current room with ID: "+data, "YELLOW")
 
     def notifications(self, data: str):
+        """
+        Draw notifications to the group chat
+        """
         player, time, msg = data.split(" ", 2)
         self.client._group_draw(
             msg, "YELLOW", "Room", time)
 
     def message(self, data: str):
+        """
+        Draw message to the group chat
+        """
         player, time, msg = data.split(" ", 2)
         self.client._group_draw(
             msg, "WHITE", player, "[{0}]".format(time))
 
-    def printError(self, data: str):
+    def setQuestion(self, data: str):
+        number, question = data.split(" ", 1)
+        """
+        Sets the current question
+        """
+        self.client.header.setQuestion(question)
+        self.client.header.setNumber(number)
+        self.client.stopTimer()
+        self.client.startTimer()
+
+    def error(self, data: str):
+        """
+        Draw errors to the connection box
+        """
         self.printWithTime(
             data, "RED")
+
+    def question(self, data: str):
+        self.client.header.setQuestion(data)
+
+    def printPlayers(self, data: str):
+        players = data.split(":")
+        self.client._group_draw(
+            "", "RED", "PLAYERS (" + str(len(players)-1) + "/4)")
+        count = 1
+        for player in players:
+            if player != "":
+                self.client._group_draw(
+                    player, "YELLOW", str(count))
+                count += 1

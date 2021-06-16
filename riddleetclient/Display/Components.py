@@ -23,17 +23,16 @@ def getColour(color):
         return 9
     elif color == "HEADER_OK":
         return 10
-    
 
 
 class Layout:
-    HEADER = 1
+    HEADER = 3
     PROMPT = 3
 
     def __init__(self, height, width):
         self.headerRows: int = Layout.HEADER
         self.headerCols: int = width
-        self.headerPositionY: int = 2
+        self.headerPositionY: int = 0
         self.headerPositionX: int = 0
 
         self.contextRows: int = height - Layout.PROMPT - Layout.HEADER
@@ -54,27 +53,50 @@ class Header:
         self.screen = screen
         self.window = curses.newwin(
             layout.headerRows, layout.headerCols, layout.headerPositionY, layout.headerPositionX)
-        self.window.bkgd(' ', curses.color_pair(getColour("HEADER")))
-        self.status = {"Name:": "Player",
+        self.status = {" Name:": "Player", "id:": "-",
                        "Server:": "NaN", "Room:": "NaN"}
+        self.current = {"Number:": "-",  "Time:": "-", "Score:": "-"}
+        self.question = {"Question:": "-", "Answer:": "-"}
         self.redraw()
 
     def redraw(self):
-        self.window.bkgd(' ', curses.color_pair(getColour("HEADER")))
         self.window.clear()
+
         limit = 0
         for key in self.status:
             limit += len(key)+len(self.status[key])+1
-            self.window.addstr(key+"\t")
+            self.window.addstr(key+" ")
             if(limit < self.layout.headerCols):
                 if(self.status[key] == "NaN"):
-
-                    self.window.addstr(
-                        self.status[key]+"\t", curses.color_pair(getColour("HEADER_OK")))
-                else:
                     self.window.addstr(
                         self.status[key]+"\t", curses.color_pair(getColour("HEADER_WARN")))
+                else:
+                    self.window.addstr(
+                        self.status[key]+"\t", curses.color_pair(getColour("HEADER_OK")))
+        self.window.move(1, 1)
 
+        limit = 0
+        for key in self.current:
+            limit += len(key)+len(self.current[key])+1
+            self.window.addstr(key+" ")
+            if(limit < self.layout.headerCols):
+                self.window.addstr(
+                    self.current[key]+"\t", curses.color_pair(getColour("HEADER_OK")))
+
+        self.window.move(1, 1)
+        self.window.move(2, 1)
+
+        limit = 0
+        for key in self.question:
+            limit += len(key)+len(self.question[key])+1
+            self.window.addstr(key+" ")
+            if(limit < self.layout.headerCols):
+                if(self.question[key] == "X"):
+                    self.window.addstr(
+                        self.question[key]+"\t", curses.color_pair(getColour("HEADER_WARN")))
+                else:
+                    self.window.addstr(
+                        self.question[key]+"\t", curses.color_pair(getColour("HEADER_OK")))
         self.window.refresh()
 
     def resize(self, layout, screen):
@@ -85,7 +107,11 @@ class Header:
         self.redraw()
 
     def setName(self, name):
-        self.status["Name:"] = name
+        self.status[" Name:"] = name
+        self.redraw()
+
+    def setID(self, id):
+        self.status["id:"] = id
         self.redraw()
 
     def setServer(self, status):
@@ -94,6 +120,22 @@ class Header:
 
     def setRoom(self, roomId):
         self.status["Room:"] = roomId
+        self.redraw()
+
+    def setNumber(self, number):
+        self.current["Number:"] = number
+        self.redraw()
+
+    def setQuestion(self, question):
+        self.question["Question:"] = question
+        self.redraw()
+
+    def setAnswer(self, answer):
+        self.question["Answer:"] = answer
+        self.redraw()
+
+    def setTimer(self, count):
+        self.current["Time:"] = count
         self.redraw()
 
 

@@ -12,9 +12,9 @@ class Display:
         curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
         curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(8, curses.COLOR_WHITE, 238)
-        curses.init_pair(9, curses.COLOR_GREEN, 238)
-        curses.init_pair(10, curses.COLOR_RED, 238)
+        curses.init_pair(8, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(9, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(10, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
         self.screen = screen
         self.height, self.width = self.screen.getmaxyx()
