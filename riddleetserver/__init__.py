@@ -125,13 +125,12 @@ class PlayerThread(Thread):
         """
         Sets the name to the given data
         """
-        print("Player at ", self.address, "set his name to:", data)
         if self.roomID != "":
             self.sendMessage("notify", self.name+" set his name to "+data)
         self.name = "{0}#{1}".format(data, self.id)
         if self.roomID != "":
             rooms[self.roomID]["playerNames"][self.id] = self.name
-            rooms[self.roomID]["playerScores"][self.id] += 3
+        time.sleep(0.5)
         sendData(self.socket, "set", "name",  data)
 
     def createRoom(self) -> None:
@@ -181,6 +180,7 @@ class PlayerThread(Thread):
                     rooms[roomID]["currentSize"] += 1
                     self.roomID = roomID
                     self.sendMessage("notify", self.name+" joined the room.")
+                    time.sleep(0.5)
                     sendData(self.socket, "join", "room", self.roomID)
                 else:
                     sendData(self.socket,
@@ -203,7 +203,6 @@ class PlayerThread(Thread):
         global rooms
         try:
             if self.roomID != "":
-                print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
                 if rooms[self.roomID]["currentSize"] > 1:
                     rooms[self.roomID]["players"].pop(self.id)
                     rooms[self.roomID]["playerNames"].pop(self.id)
@@ -216,7 +215,6 @@ class PlayerThread(Thread):
                     time.sleep(0.5)
                     if self.id == rooms[self.roomID]["owner"]:
                         key = random.choice(list(rooms[self.roomID]["players"].keys()))
-                        print(key,"--------------------------")
                         rooms[self.roomID]["owner"] = key
                         self.sendMessage("notify", rooms[self.roomID]["playerNames"][key]+" becomes the owner.")
             

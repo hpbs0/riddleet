@@ -47,7 +47,6 @@ class Connection(Thread):
                 self.client.isConnected = False
                 self.client.header.setName("Player")
                 self.client.header.setRoom("NaN")
-                self.client._server_draw(str(e), "RED")
                 self.client.header.setServer("NaN")
                 self.client.header.setQuestion("-")
                 self.client.header.setNumber("-")

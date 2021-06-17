@@ -6,6 +6,8 @@
 
 Riddle game with group chat made with Python **sockets** and **curses**. Client and Server are tested on **Python 3.9** so you need to execute them on *Python 3.9+*. I only used standard python libraries.
 
+Each player can open or join a room. Game gets started by the owner of the group. Each question/riddle is 10 points.
+
 ``` Python
 Execution:
     client: python3 client.py
@@ -40,7 +42,7 @@ Commands with ! at the end of their explanation needs server connection to execu
 
 Client server, reacts to data sent from the server and display the changes and requests on the IU. Mounted on its own thread.
 
-Endpoints for server to use for **requests/responds**. If route does not have specified data, it can be executed without data.
+Endpoints for server to use for **requests/responds**.
 
 |Route| Description|
 | :-- | --:|
@@ -116,22 +118,22 @@ Game loop started by the owner of the group and reference to its object is given
 
 ### Player Thread
 
-Endpoints for client to use for **requests**. If route does not have specified data, it can be executed without data.
+Endpoints for client/players to use for **requests**.
 
 |Route| Description|
 | :-- | --:|
 |set name \<name>| Sets the player name on the server and sends a set name response to the client to match the names.|
 |open room| Opens a room in the server and sends open room response to the client which sets the roomID on client to the joined room.|
-|join room \<roomID>|Joins a room with the id "roomID" if it exist.Responds with appropriate errors or if successful sends join room response which sets the roomID on client to the joined room|
-|leave room|Leaves the current room and sends leave room response to the client which sets the room to null. If owner leaves selects a new random owner|
-|send message \<message>|Echos the sent message to all users in the room|
-|start game|Totally starts the game|
+|join room \<roomID>|Joins a room with the id "roomID" if it exist.Responds with appropriate errors or if successful sends join room response which sets the roomID on client to the joined room.|
+|leave room|Leaves the current room and sends leave room response to the client which sets the room to null. If owner leaves, selects a new random owner.|
+|send message \<message>|Echos the sent message to all users in the room.|
+|start game|Starts the game.|
 |send answer \<answer>|Answer endpoint, checks with current question answer and if correct increases the score and returns accept answer response, if answer does not match return reject answer response. If encounter error returns an error to client.|
 |get players |Get the players in to room, used for printing leaderboard/player list|
 
 ### Game
 
-Contains the main game loop, started by the **start game** request by the ***owner*** of the room. Currently each question has 15 seconds and each game session has 5 question but these can connected to endpoints easily. Loops through the questions, sends them to each player in the room and waits for answers for 15 seconds and after that changes the question so on so forth. With each iteration and at the end of the game sends request to client to print leaderboard.
+Contains the main game loop, started by the **start game** request by the ***owner*** of the room. Currently each question has 15 seconds and each game session has 5 question but these can be connected to endpoints easily. Loops through the questions, sends them to each player in the room and waits for answers for 15 seconds and after that changes the question so on so forth. With each iteration and at the end of the game, sends request to client to print leaderboard.
 
 ### Question
 
@@ -139,4 +141,6 @@ For question utils, class for question storing and comparison and function to re
 
 ***
 
-For execution screenshots you can look into screenshots.pdf
+For execution you can look into client.gif or server.gif in the execution folder or screenshots folder for individual screenshots.
+
+Screenshots dos not cover all of the functionality, only captures the main game loop and room mechanic.
