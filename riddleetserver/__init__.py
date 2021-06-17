@@ -263,7 +263,7 @@ class PlayerThread(Thread):
         if self.roomID != "" and self.id == rooms[self.roomID]["owner"] and rooms[self.roomID]["status"] != "STARTED":
             rooms[self.roomID]["status"] = "STARTED"
             questions = sample(riddles, 5)
-            self.game = Game(questions, rooms[self.roomID], self.players)
+            self.game = Game(questions, rooms[self.roomID])
             rooms[self.roomID]["game"] = self.game
             self.game.start()
             pass

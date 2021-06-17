@@ -155,6 +155,11 @@ class Connection(Thread):
 
     def leaveRoom(self, data: str):
         self.client.header.setRoom("NaN")
+        self.client.header.setAnswer("-")
+        self.client.header.setQuestion("-")
+        self.client.header.setNumber("-")
+        self.client.header.setScore("-")
+        self.client.stopTimer()
         self.printWithTime(
             "Leaved current room with ID: "+data, "YELLOW")
 

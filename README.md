@@ -50,9 +50,9 @@ Endpoints for server to use for **requests/responds**. If route does not have sp
 |**Room**||
 |open room|Response for opening a room, sets the current room.
 |join room \<roomID>|Response for joining a room, sets the current room.
-|leave room|Response for leaving a room, sets the current room on.
+|leave room|Response for leaving a room, sets the current room null. Leaving from ongoing game clears question and game information headers.
 |**Message**||
-|send notify \<notification>|Notification endpoint for server to sends notifications.
+|send notify \<notification>|Notification endpoint for server to sends notifications about group.
 |send message \<message>|Message endpoint for server to sends messages from |other players.
 |**Game**||
 |start game|Response affirming the game has been started, sets the |game on and make client send player messages to server as answers.
@@ -123,7 +123,7 @@ Endpoints for client to use for **requests**. If route does not have specified d
 |set name \<name>| Sets the player name on the server and sends a set name response to the client to match the names.|
 |open room| Opens a room in the server and sends open room response to the client which sets the roomID on client to the joined room.|
 |join room \<roomID>|Joins a room with the id "roomID" if it exist.Responds with appropriate errors or if successful sends join room response which sets the roomID on client to the joined room|
-|leave room|Leaves the current room and sends leave room response to the client which sets the room to null|
+|leave room|Leaves the current room and sends leave room response to the client which sets the room to null. If owner leaves selects a new random owner|
 |send message \<message>|Echos the sent message to all users in the room|
 |start game|Totally starts the game|
 |send answer \<answer>|Answer endpoint, checks with current question answer and if correct increases the score and returns accept answer response, if answer does not match return reject answer response. If encounter error returns an error to client.|

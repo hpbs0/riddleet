@@ -12,7 +12,7 @@ class Game(Thread):
     Started by the owner of the group, room has reference to the game instance
     """
 
-    def __init__(self, questions: List[Question], room, playerList) -> None:
+    def __init__(self, questions: List[Question], room) -> None:
         from riddleetserver import sendData
         super(Game, self).__init__()
         self.sendData = sendData
@@ -20,7 +20,6 @@ class Game(Thread):
         self.question: Question = None
         self.currentMax = len(self.questions)
         self.currentNumber = 1
-        self.playerList = playerList
         """
         room:
             owner: str
@@ -88,13 +87,21 @@ class Game(Thread):
         Sends the leaderboard to all of the players in the room
         Used just before sending the questions
         """
-        data = self.playerList()
-        if isinstance(data, list):
-            s = ":"
-            s = ":"+s.join(data)
-            for player in self.room["players"]:
-                self.sendData(self.room["players"][player], "print", "lb", s)
-            time.sleep(1)
+        data = []
+        sort_orders = sorted(
+        self.room["playerScores"].items(), key=lambda x: x[1], reverse=True)
+        for id, score in sort_orders:
+            if id != self.room["owner"]:
+                data.append(self.room["playerNames"][id] +
+                            "-(Score=" + str(score) + ")")
+            else:
+                data.append(self.room["playerNames"][id] +
+                            "-(Score=" + str(score) + ")-Owner")
+        s = ":"
+        s = ":"+s.join(data)
+        for player in self.room["players"]:
+            self.sendData(self.room["players"][player], "print", "lb", s)
+        time.sleep(1)
 
     def stopped(self):
         """
