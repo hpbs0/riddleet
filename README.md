@@ -27,7 +27,6 @@ Execution:
 /r <''|group|server> clean the view,
 /n <name>:           set your name!,
 /o                   open a room!,
-/k <playerID> :      Kick a player!,
 /j <id>:             joins to a playroom!,
 /d                   leave the room!,
 /s                   Start the game!,
@@ -143,3 +142,9 @@ For question utils, class for question storing and comparison and function to re
 For execution you can look into client.gif or server.gif in the execution folder or screenshots folder for individual screenshots.
 
 Screenshots dos not cover all of the functionality, only captures the main game loop and room mechanic.
+
+### Reference
+
+1. <https://docs.python.org/3/library/threading.html>
+2. <https://docs.python.org/3/howto/curses.html>
+3. <http://net-informations.com/python/net/thread.htm>
