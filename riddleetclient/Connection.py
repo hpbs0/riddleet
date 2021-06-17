@@ -72,11 +72,11 @@ class Connection(Thread):
 
             typ, request, data = data.split(":", 2)
 
-            # set name <data>
+            # set name <name:string>
             if typ == "set" and request == "name":
                 self.setName(data)
 
-            # set id <data>
+            # set id <id:string>
             if typ == "set" and request == "id":
                 self.setID(data)
 
@@ -100,13 +100,33 @@ class Connection(Thread):
             elif typ == "send" and request == "message":
                 self.message(data)
 
+            # start game <>
+            elif typ == "start" and request == "game":
+                self.startGame()
+
+            # end game <>
+            elif typ == "end" and request == "game":
+                self.endGame()
+
             # set question <question:string>
             elif typ == "set" and request == "question":
                 self.setQuestion(data)
 
+            # set score <score:string>
+            elif typ == "set" and request == "score":
+                self.setScore(data)
+
             # set error <error:string>
             elif typ == "set" and request == "error":
                 self.error(data)
+
+            # accept answer <score>
+            elif typ == "accept" and request == "answer":
+                self.acceptAnswer(data)
+
+            # reject answer <>
+            elif typ == "reject" and request == "answer":
+                self.rejectAnswer()
 
             # print lb <players:[string:]*>
             elif typ == "print" and request == "lb":
@@ -155,14 +175,23 @@ class Connection(Thread):
             msg, "WHITE", player, "[{0}]".format(time))
 
     def setQuestion(self, data: str):
-        number, question = data.split(" ", 1)
+        number, currentScore, question = data.split(" ", 2)
         """
         Sets the current question
         """
         self.client.header.setQuestion(question)
+        self.client.header.setAnswer("-")
         self.client.header.setNumber(number)
+        self.client.header.setScore(currentScore)
         self.client.stopTimer()
         self.client.startTimer()
+
+    def acceptAnswer(self, data: str):
+        self.client.header.setAnswer("✓")
+        self.client.header.setScore(data)
+
+    def rejectAnswer(self):
+        self.client.header.setAnswer("x")
 
     def error(self, data: str):
         """
@@ -171,8 +200,19 @@ class Connection(Thread):
         self.printWithTime(
             data, "RED")
 
-    def question(self, data: str):
-        self.client.header.setQuestion(data)
+    def setScore(self, data: str):
+        self.client.header.setScore(data)
+
+    def startGame(self):
+        self.printWithTime("Game started, Good luck!", "GREEN")
+        self.client.isGameRuning = True
+
+    def endGame(self):
+        self.printWithTime(
+            "Game ended, you can restart the game with '/s'", "GREEN")
+        self.client.header.setQuestion("-")
+        self.client.header.setAnswer("-")
+        self.client.isGameRuning = False
 
     def printPlayers(self, data: str):
         players = data.split(":")

@@ -2,7 +2,10 @@ import curses
 
 
 def getColour(color):
-
+    """
+    Gets a colour as a string
+    Returns the appropriate color index
+    """
     if color == "RED":
         return 1
     elif color == "GREEN":
@@ -26,6 +29,9 @@ def getColour(color):
 
 
 class Layout:
+    """
+    Grid structure for the UI
+    """
     HEADER = 3
     PROMPT = 3
 
@@ -47,7 +53,12 @@ class Layout:
 
 
 class Header:
-
+    """
+    Contains information about 
+        current player(name, server connection, etc.)
+                game state(remaining time, question number, score)
+                question(question, answer state)
+    """
     def __init__(self, layout: Layout, screen):
         self.layout: Layout = layout
         self.screen = screen
@@ -130,6 +141,10 @@ class Header:
         self.question["Question:"] = question
         self.redraw()
 
+    def setScore(self, score):
+        self.current["Score:"] = score
+        self.redraw()
+
     def setAnswer(self, answer):
         self.question["Answer:"] = answer
         self.redraw()
@@ -140,6 +155,16 @@ class Header:
 
 
 class Context:
+    """
+    Context Element for
+        player prompt box
+        group chat box
+        server box
+    
+    Can render multicolored lines
+    Somewhat resizeable but fullscreen is recommended
+    Renders the number of children(messages, errors, etc.) appropriate to its size
+    """
     def __init__(self, layout: Layout, screen, xFactor=6, yFactor=6, xOffset=0, yOffset=0):
         self.layout: Layout = layout
         self.screen = screen
@@ -149,6 +174,9 @@ class Context:
         self.childrenBoxLimit = (yFactor*layout.contextRows//12)-4
 
     def resize(self, layout, screen, xFactor=6, yFactor=6, xOffset=0, yOffset=0):
+        """
+        Resizing the UI element according to the max width and height with appropriate factors
+        """
         self.layout = layout
         self.screen = screen
         self.window = curses.newwin(
@@ -160,9 +188,16 @@ class Context:
         self.children = children
 
     def append(self, child, color="WHITE"):
+        """
+        Append a string and its color to children box
+        """
         self.children.append((child, color))
 
     def redrawMultiColour(self):
+        """
+        Draws the children box
+        Multicolored
+        """
         self.window.clear()
         currentRow = self.childrenBoxLimit+5
         if self.childrenBoxLimit > 0:
@@ -178,6 +213,10 @@ class Context:
 
 
 class Prompt:
+    """
+    Prompt for user to use
+    Renders the current input
+    """
     def __init__(self, layout: Layout, screen):
         self.layout: Layout = layout
         self.screen = screen

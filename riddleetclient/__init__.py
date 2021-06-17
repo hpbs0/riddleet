@@ -4,14 +4,18 @@ from .Timer import Timer
 
 
 class Client(Display):
+    """
+    Contains the main game loop and Game UI
+    Sends requests to the server via socket with the appopiate user commands
+    """
+
     def __init__(self, screen):
         Display.__init__(self, screen)
-        self.isRunning = True
-        self.isGameRuning = False
-        self.needConnection = False
-        self.isConnected = False
+        self.isRunning: bool = True
+        self.isGameRuning: bool = False
+        self.needConnection: bool = False
+        self.isConnected: bool = False
         self.socket = None
-        self.counter = Timer(self)
         self.timer = None
 
         try:
@@ -31,8 +35,8 @@ class Client(Display):
                     "/k <playerID> \t\t: Kick a player!",
                     "/j <id>\t\t\t: joins to a playroom!",
                     "/d \t\t\t: leave the room!",
-                    "/st \t\t\t: Start the game!",
-                    "/p \t\t\t: Print the players/leaderboard!", 
+                    "/s \t\t\t: Start the game!",
+                    "/p \t\t\t: Print the players/leaderboard!",
                     "/!<msg>\t\t\t: send a message to your room!"]
 
         self._prompt_draw("")
@@ -66,10 +70,16 @@ class Client(Display):
         self.serverContext.redrawMultiColour()
 
     def startTimer(self):
+        """
+        Starts the timer for the question
+        """
         self.timer = Timer(self)
         self.timer.start()
 
     def stopTimer(self):
+        """
+        Ends the timer for the question if timer is not already stopped
+        """
         if self.timer != None:
             self.timer.stop()
         self.timer = None
@@ -95,19 +105,16 @@ class Client(Display):
                     elif msg == "/r server":
                         self.serverContext.clearAnswers()
                     elif msg[:3] == "/n ":
-                        self.waitServerConnection(
-                            self.setNameRequest, msg[3:])
+                        self.waitServerConnection(self.setNameRequest, msg[3:])
                     elif msg == "/o":
                         self.waitServerConnection(self.openRoom)
                     elif msg[:3] == "/j ":
-                        self.waitServerConnection(
-                            self.joinRoom, msg[3:])
+                        self.waitServerConnection(self.joinRoom, msg[3:])
                     elif msg[:1] == "!":
-                        self.waitServerConnection(
-                            self.sendMessage, msg[1:])
+                        self.waitServerConnection(self.sendMessage, msg[1:])
                     elif msg == "/d":
                         self.waitServerConnection(self.leaveRoom)
-                    elif msg == "/st":
+                    elif msg == "/s":
                         self.waitServerConnection(self.startGame)
                     elif msg == "/p":
                         self.waitServerConnection(self.getPlayers)
@@ -115,6 +122,8 @@ class Client(Display):
                         self._prompt_draw(
                             "{0}:Command not found".format(msg), "RED")
                     elif msg != '':
+                        if self.isGameRuning:
+                            self.waitServerConnection(self.sendAnswer, msg)
                         self._prompt_draw(msg, "WHITE")
                     else:
                         self._prompt_draw("-->!Server not connected", "YELLOW")
@@ -155,13 +164,22 @@ class Client(Display):
     def openRoom(self):
         """
         Sends an open room request
+        Cannot open a room in another room
         """
         self.socket.sendall(bytes("open:room:", 'UTF-8'))
+
+    def sendAnswer(self, answer: str):
+        """
+        Sends the given answer to the server
+        If Player answer before was correct prints an error message
+        """
+        self.socket.sendall(bytes("send:answer:{0}".format(answer), 'UTF-8'))
 
     def joinRoom(self, roomID):
         """
         Sends an join room request
         Length of the roomID's are 6
+        Prints an error message if can not join a room for some reason
         """
         if len(roomID) < 7:
             self.socket.sendall(bytes("join:room:{0}".format(roomID), 'UTF-8'))
@@ -173,6 +191,7 @@ class Client(Display):
         """
         Sends an join room request
         Length of the roomID's are 6
+        Player needs to be in a room to be able to send a message
         """
         if len(msg) > 0:
             self.socket.sendall(bytes("send:message:{0}".format(msg), 'UTF-8'))
@@ -180,17 +199,21 @@ class Client(Display):
     def leaveRoom(self):
         """
         Sends a leave room request
+        Leaves the current room afterward
         """
         self.socket.sendall(bytes("leave:room:", 'UTF-8'))
 
     def startGame(self):
         """
         Sends a start game request
+        If game is not startable prints an error message
         """
         self.socket.sendall(bytes("start:game:", 'UTF-8'))
 
     def getPlayers(self):
         """
         Sends a request for player table
+        Prints the players in the room as a table
+        If not in the table prints an error message
         """
         self.socket.sendall(bytes("get:players:", 'UTF-8'))

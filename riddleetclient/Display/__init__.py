@@ -3,6 +3,18 @@ from .Components import Layout, Header, Context, Prompt
 
 
 class Display:
+    """
+    Main Display
+    Has 3 contexts
+        User
+        Group
+        Server
+
+    Each context has its own children
+    Can get input with Prompt
+    Handles all resizing and printing of the contexts
+    initialize the colours used in the Client
+    """
     def __init__(self, screen):
         curses.curs_set(False)
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -56,6 +68,11 @@ class Display:
             self.screen.clear()
 
     def getInput(self):
+        """
+        Player can not put more than one space between words
+        Player can not start message/command with space
+        Prompt can be cleared with backspace 
+        """
         buffer = []
         self.prompt.redraw("".join(buffer))
         char = ''
@@ -65,11 +82,11 @@ class Display:
                 buffer.pop()
             elif char == curses.KEY_RESIZE:
                 self.resize()
-            elif char == 32 and len(buffer) == 1:
+            elif char == 32 and len(buffer) == 0:
                 continue
-            elif char == 32 and len(buffer) > 1 and buffer[-1] == " ":
+            elif char == 32 and len(buffer) > 0 and buffer[-1] == " ":
                 continue
-            elif char == 32 and len(buffer) < 1:
+            elif char == 32 and len(buffer) < 0:
                 continue
             elif 32 <= char <= 126 and len(buffer) < 70:
                 buffer.append(chr(char))

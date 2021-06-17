@@ -1,4 +1,4 @@
-from curses import wrapper as Display
+from curses import wrapper
 from riddleetclient import Client 
 
 def main(stdscr):
@@ -6,4 +6,4 @@ def main(stdscr):
 
 
 if __name__ == "__main__":
-    Display(main)
+    wrapper(main)

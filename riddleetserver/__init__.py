@@ -3,6 +3,7 @@ from threading import Thread
 import random
 import string
 from datetime import datetime
+import time
 from typing import List
 from .Question import Question, readRiddles
 from random import sample
@@ -19,12 +20,15 @@ players = {}
             status: WAIT | STARTED
             maxSize: int
             currentSize: int
+            game: Game
             players:
                 ID:socket
             playerNames:
                 ID:str
             playerScores:
-                ID:int   
+                ID:int  
+            playerAnswered:
+                ID:bool  
 """
 riddles: List[Question] = []
 
@@ -67,11 +71,7 @@ class PlayerThread(Thread):
             request: specify where request is to ex:name/room/chat
             data: body of the request
 
-        Current opeartions:
-            -Set name request
-            -Open room request
-            -Join room request
-            -Leave room request
+        Current opeartions can be found in README with details
         """
         try:
             global rooms
@@ -82,7 +82,7 @@ class PlayerThread(Thread):
             while True:
                 data = self.socket.recv(1024).decode()
                 typ, request, data = data.split(":", 2)
-                print(typ, request, data)
+                print(typ,request,data)
                 # Set name request
                 if typ == "set" and request == "name":
                     self.setName(data)
@@ -106,10 +106,12 @@ class PlayerThread(Thread):
                 # Start game request
                 elif typ == "start" and request == "game":
                     self.startGame()
-
+                # get the list of players
+                elif typ == "send" and request == "answer":
+                    self.answer(data)
                 # get the list of players
                 elif typ == "get" and request == "players":
-                    self.players()
+                    self.getPlayer()
 
         except Exception as e:
             print(e)
@@ -147,11 +149,13 @@ class PlayerThread(Thread):
             rooms[self.roomID]["players"] = {}
             rooms[self.roomID]["playerNames"] = {}
             rooms[self.roomID]["playerScores"] = {}
+            rooms[self.roomID]["playerAnswered"] = {}
             rooms[self.roomID]["maxSize"] = 4
             rooms[self.roomID]["currentSize"] = 1
             rooms[self.roomID]["players"][self.id] = self.socket
             rooms[self.roomID]["playerNames"][self.id] = self.name
             rooms[self.roomID]["playerScores"][self.id] = 0
+            rooms[self.roomID]["playerAnswered"][self.id] = False
             return sendData(self.socket, "open", "room", self.roomID)
         else:
             return sendData(self.socket,
@@ -161,19 +165,26 @@ class PlayerThread(Thread):
         """
         Joins to the room of another client
         Player cant join if:
+            Room reached the maximum number of people
+            Game has been started
             You are in a room
             The id you entered is wrong
         """
         global rooms
         if self.roomID == "" and roomID in rooms:
             if rooms[roomID]["currentSize"] < rooms[roomID]["maxSize"]:
-                rooms[roomID]["players"][self.id] = self.socket
-                rooms[roomID]["playerNames"][self.id] = self.name
-                rooms[roomID]["playerScores"][self.id] = 0
-                rooms[roomID]["currentSize"] += 1
-                self.roomID = roomID
-                self.sendMessage("notify", self.name+" joined the room.")
-                sendData(self.socket, "join", "room", self.roomID)
+                if rooms[roomID]["status"] == "WAIT":
+                    rooms[roomID]["players"][self.id] = self.socket
+                    rooms[roomID]["playerNames"][self.id] = self.name
+                    rooms[roomID]["playerScores"][self.id] = 0
+                    rooms[roomID]["playerAnswered"][self.id] = False
+                    rooms[roomID]["currentSize"] += 1
+                    self.roomID = roomID
+                    self.sendMessage("notify", self.name+" joined the room.")
+                    sendData(self.socket, "join", "room", self.roomID)
+                else:
+                    sendData(self.socket,
+                             "set", "error", "You can not join a started game, wait for it to end.")
             else:
                 sendData(self.socket,
                          "set", "error", "Max size of the room is "+str(rooms[roomID]["maxSize"])+".")
@@ -192,15 +203,28 @@ class PlayerThread(Thread):
         global rooms
         try:
             if self.roomID != "":
-                if rooms[self.roomID]["currentSize"] >= 0:
+                print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                if rooms[self.roomID]["currentSize"] > 1:
                     rooms[self.roomID]["players"].pop(self.id)
                     rooms[self.roomID]["playerNames"].pop(self.id)
                     rooms[self.roomID]["playerScores"].pop(self.id)
+                    rooms[self.roomID]["playerAnswered"].pop(self.id)
                     rooms[self.roomID]["currentSize"] -= 1
-                    if rooms[self.roomID]["currentSize"] < 0:
-                        rooms.pop(self.roomID)
-                    else:
-                        self.sendMessage("notify", self.name+" left the room.")
+                    self.sendMessage("notify", self.name+" left the room.")
+                    time.sleep(0.5)
+                    sendData(self.socket, "leave", "room", self.roomID)
+                    time.sleep(0.5)
+                    if self.id == rooms[self.roomID]["owner"]:
+                        key = random.choice(list(rooms[self.roomID]["players"].keys()))
+                        print(key,"--------------------------")
+                        rooms[self.roomID]["owner"] = key
+                        self.sendMessage("notify", rooms[self.roomID]["playerNames"][key]+" becomes the owner.")
+            
+                    self.roomID = ""
+                else:
+                    self.sendMessage("notify", self.name+" left the room.")
+                    time.sleep(0.5)
+                    rooms.pop(self.roomID)
                     sendData(self.socket, "leave", "room", self.roomID)
                     self.roomID = ""
             else:
@@ -236,15 +260,45 @@ class PlayerThread(Thread):
         """
         """
         global rooms
-        if self.roomID != "":
+        if self.roomID != "" and self.id == rooms[self.roomID]["owner"] and rooms[self.roomID]["status"] != "STARTED":
             rooms[self.roomID]["status"] = "STARTED"
             questions = sample(riddles, 5)
-            self.game = Game(questions, rooms[self.roomID])
+            self.game = Game(questions, rooms[self.roomID], self.players)
+            rooms[self.roomID]["game"] = self.game
             self.game.start()
-            sendData(self.socket, "start", "game")
             pass
+        elif rooms[self.roomID]["status"] == "STARTED":
+            return sendData(self.socket,
+                            "set", "error", "Game has been already started, please wait for it to finish.")
+        elif self.id != rooms[self.roomID]["owner"]:
+            return sendData(self.socket,
+                            "set", "error", "You are not the owner, wait for owner to start the game.")
         else:
-            return sendData(self.socket, "set", "error", "You need to be in a room before Starting a game.")
+            return sendData(self.socket,
+                            "set", "error", "You need to be in a room before Starting a game.")
+
+    def getPlayer(self) -> None:
+        data = self.players()
+        if isinstance(data, list):
+            s = ":"
+            sendData(self.socket,
+                     "print", "lb", ":" + s.join(data))
+
+    def answer(self, answer) -> None:
+        game: Game = rooms[self.roomID]["game"]
+        if game.question != None and game.question.compareAnswer(answer) and not rooms[self.roomID]["playerAnswered"][self.id]:
+            rooms[self.roomID]["playerScores"][self.id] += 10
+            rooms[self.roomID]["playerAnswered"][self.id] = True
+            sendData(self.socket, "accept", "answer", str(
+                rooms[self.roomID]["playerScores"][self.id]))
+        elif rooms[self.roomID]["playerAnswered"][self.id]:
+            sendData(self.socket,
+                     "set", "error", "Wait for another question, you already answered.")
+        elif game.question == None:
+            sendData(self.socket,
+                     "set", "error", "Wait for question.")
+        else:
+            sendData(self.socket, "reject", "answer", "")
 
     def players(self) -> None:
         """
@@ -252,7 +306,7 @@ class PlayerThread(Thread):
         global rooms
         if self.roomID != "":
             data = []
-            s = ":"
+
             if rooms[self.roomID]["status"] == "STARTED":
                 sort_orders = sorted(
                     rooms[self.roomID]["playerScores"].items(), key=lambda x: x[1], reverse=True)
@@ -269,6 +323,7 @@ class PlayerThread(Thread):
                 for player in rooms[self.roomID]["playerNames"].keys():
                     if player != rooms[self.roomID]["owner"]:
                         data.append(rooms[self.roomID]["playerNames"][player])
+            return data
         else:
             return sendData(self.socket,
                             "set", "error", "You need to be in a room before seeing the players.")
