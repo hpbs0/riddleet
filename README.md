@@ -20,7 +20,6 @@ Execution:
 
 > Uses curses, works on terminal. Includes a client server and UI element for consoles.
 
-
 ### User Commands
 
 ```Python
