@@ -143,7 +143,7 @@ For execution you can look into client.gif or server.gif in the execution folder
 
 Screenshots dos not cover all of the functionality, only captures the main game loop and room mechanic.
 
-### Reference
+## Reference
 
 1. <https://docs.python.org/3/library/threading.html>
 2. <https://docs.python.org/3/howto/curses.html>
